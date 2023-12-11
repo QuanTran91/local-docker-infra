@@ -1,0 +1,128 @@
+version: '3.7'
+
+services:
+  zoo:
+    image: confluentinc/cp-zookeeper:7.1.0-1-ubi8
+    hostname: zoo
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_ZOO_MY_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_ZOO_SERVERS: server.1=zoo:2888:3888
+      ZOOKEEPER_SASL_ENABLED: "false"
+    volumes:
+      - zoo_data:/var/lib/zookeeper/data
+      - zoo_data_log:/var/lib/zookeeper/log
+      - zoo_secret:/etc/zookeeper/secrets
+
+  kafka1:
+    image: confluentinc/cp-kafka:7.1.0-1-ubi8
+    hostname: kafka1
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka1:19091,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:SASL_PLAINTEXT,LISTENER_DOCKER_EXTERNAL:SASL_PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
+      KAFKA_BROKER_ID: 1
+      KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
+      KAFKA_ZOOKEEPER_CONNECT: zoo:2181
+      ZOOKEEPER_SASL_ENABLED: "false"
+      KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf"
+      KAFKA_SASL_ENABLED_MECHANISMS: PLAIN
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      KAFKA_SUPER_USERS: User:admin
+    volumes:
+      - kafka_data1:/var/lib/kafka/data
+      - kafka_secret1:/etc/kafka/secrets
+      - ./kafka_server_jaas.conf:/etc/kafka/kafka_server_jaas.conf
+    depends_on:
+      - zoo
+
+  kafka2:
+    image: confluentinc/cp-kafka:7.1.0-1-ubi8
+    hostname: kafka2
+    ports:
+      - "9093:9093"
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka2:19091,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:SASL_PLAINTEXT,LISTENER_DOCKER_EXTERNAL:SASL_PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
+      KAFKA_BROKER_ID: 2
+      KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
+      KAFKA_ZOOKEEPER_CONNECT: zoo:2181
+      ZOOKEEPER_SASL_ENABLED: "false"
+      KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf"
+      KAFKA_SASL_ENABLED_MECHANISMS: PLAIN
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      KAFKA_SUPER_USERS: User:admin
+    volumes:
+      - kafka_data2:/var/lib/kafka/data
+      - kafka_secret2:/etc/kafka/secrets
+      - ./kafka_server_jaas.conf:/etc/kafka/kafka_server_jaas.conf
+    depends_on:
+      - zoo
+
+  kafka3:
+    image: confluentinc/cp-kafka:7.1.0-1-ubi8
+    hostname: kafka3
+    ports:
+      - "9094:9094"
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka3:19091,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:SASL_PLAINTEXT,LISTENER_DOCKER_EXTERNAL:SASL_PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
+      KAFKA_BROKER_ID: 3
+      KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
+      KAFKA_ZOOKEEPER_CONNECT: zoo:2181
+      ZOOKEEPER_SASL_ENABLED: "false"
+      KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf"
+      KAFKA_SASL_ENABLED_MECHANISMS: PLAIN
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      KAFKA_SUPER_USERS: User:admin
+    volumes:
+      - kafka_data3:/var/lib/kafka/data
+      - kafka_secret3:/etc/kafka/secrets
+      - ./kafka_server_jaas.conf:/etc/kafka/kafka_server_jaas.conf
+    depends_on:
+      - zoo
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui
+    ports:
+      - "8089:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka1:19091
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zoo:2181
+      KAFKA_CLUSTERS_0_PROPERTIES_SASL_JAAS_CONFIG: 'org.apache.kafka.common.security.plain.PlainLoginModule required username="admin" password="admin-secret";'
+      KAFKA_CLUSTERS_0_PROPERTIES_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      KAFKA_CLUSTERS_0_PROPERTIES_SASL_MECHANISM: PLAIN
+      
+
+      KAFKA_CLUSTERS_1_NAME: dev
+      KAFKA_CLUSTERS_1_BOOTSTRAPSERVERS: ontv-kafka-0.ontv.dev.internal:9094
+      KAFKA_CLUSTERS_1_ZOOKEEPER: ontv-kafka-zookeeper.ontv.dev.internal:2181
+      KAFKA_CLUSTERS_1_PROPERTIES_SASL_JAAS_CONFIG: 'org.apache.kafka.common.security.plain.PlainLoginModule required username="ontv" password="eesahloHeb0zoh8aegh4";'
+      KAFKA_CLUSTERS_1_PROPERTIES_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      KAFKA_CLUSTERS_1_PROPERTIES_SASL_MECHANISM: PLAIN
+
+
+
+volumes:
+  zoo_data:
+  zoo_data_log:
+  zoo_secret:
+  kafka_data1:
+  kafka_secret1:
+  kafka_data2:
+  kafka_secret2:
+  kafka_data3:
+  kafka_secret3:
