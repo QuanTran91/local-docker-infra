@@ -2,6 +2,7 @@ version: '3.7'
 services:
   cassandra1:
     image: cassandra:4.1.3
+    container_name: cassandra1
     ports:
       #      - 7070:7000
       - 9042:9042
@@ -28,9 +29,10 @@ services:
 
   cassandra2:
     image: cassandra:4.1.3
-    #    ports:
+    container_name: cassandra2
+    ports:
     #      - 7071:7000
-    #      - 9043:9042
+      - 9043:9042
     volumes:
       - cassandra2_data:/var/lib/cassandra
     environment:
